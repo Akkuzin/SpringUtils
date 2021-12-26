@@ -1,10 +1,12 @@
 package aaa.utils.spring.errors;
 
+import aaa.basis.text.StringFunc;
+import aaa.lang.reflection.ReflectionUtils;
+import aaa.lang.reflection.ReflectionUtils.SerializableBiConsumer;
+import aaa.lang.reflection.ReflectionUtils.SerializableFunction;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
-
-import aaa.basis.text.StringFunc;
 
 public class ErrorsMerger {
 
@@ -12,7 +14,7 @@ public class ErrorsMerger {
 
 	/**
 	 * Append errors messages
-	 * 
+	 *
 	 * @param errors
 	 *            Main errors collection
 	 * @param newErrors
@@ -44,6 +46,14 @@ public class ErrorsMerger {
 			errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage());
 		}
 	}
+
+  public static void mergeErrorsToField(Errors errors, Errors newErrors, SerializableFunction getter) {
+    mergeErrorsToField(errors, newErrors, ReflectionUtils.propertyNameFor(getter));
+  }
+
+  public static void mergeErrorsToField(Errors errors, Errors newErrors, SerializableBiConsumer setter) {
+    mergeErrorsToField(errors, newErrors, ReflectionUtils.propertyNameFor(setter));
+  }
 
 	public static void mergeErrorsToField(Errors errors, Errors newErrors, String relativePath) {
 		// Global errors

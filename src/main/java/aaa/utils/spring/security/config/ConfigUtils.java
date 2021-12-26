@@ -1,7 +1,6 @@
 package aaa.utils.spring.security.config;
 
-import java.util.Locale;
-
+import aaa.utils.files.upload.MaxUploadSizeExceededExceptionHandler;
 import org.springframework.jmx.support.MBeanServerFactoryBean;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -10,7 +9,7 @@ import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import aaa.utils.upload.MaxUploadSizeExceededExceptionHandler;
+import java.util.Locale;
 
 public class ConfigUtils {
 

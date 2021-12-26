@@ -1,25 +1,17 @@
-package aaa.utils.upload;
+package aaa.utils.files.upload;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.function.Function;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import lombok.Builder;
+import aaa.utils.spring.mvc.MediaTypeUtils;
+import lombok.*;
 import org.apache.commons.io.FileUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
-import aaa.utils.spring.mvc.MediaTypeUtils;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,11 +24,7 @@ public class MaxUploadSizeExceededExceptionHandler implements HandlerExceptionRe
 	@Getter
 	Long maxLengthInMegabytes = DEFAULT_MAX_SIZE;
 
-	@Setter
-	Function<Long, String> messageResolver =
-			(size) -> "Размер прикрепляемого файла не должен превышать " + size + "Мб";
-
-	public void setMaxLengthInBytes(long length) {
+  public void setMaxLengthInBytes(long length) {
 		this.maxLengthInMegabytes = length / FileUtils.ONE_MB;
 	}
 
@@ -45,7 +33,7 @@ public class MaxUploadSizeExceededExceptionHandler implements HandlerExceptionRe
 	}
 
 	public String getExceedMessage() {
-		return messageResolver.apply(maxLengthInMegabytes);
+		return "Размер прикрепляемого файла не должен превышать " + maxLengthInMegabytes + "Мб";
 	}
 
 	public ModelAndView resolveException(	HttpServletRequest request,
