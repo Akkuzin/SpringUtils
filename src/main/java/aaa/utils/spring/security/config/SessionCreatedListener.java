@@ -18,13 +18,12 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SessionCreatedListener implements ApplicationListener<HttpSessionCreatedEvent> {
 
-	public static final int DEFAULT_MAX_INACTIVE_INTERVAL = (int) TimeUnit.HOURS.toSeconds(1);
+  public static final int DEFAULT_MAX_INACTIVE_INTERVAL = (int) TimeUnit.HOURS.toSeconds(1);
 
-	int maxInactiveInterval = DEFAULT_MAX_INACTIVE_INTERVAL;
+  int maxInactiveInterval = DEFAULT_MAX_INACTIVE_INTERVAL;
 
-	@Override
-	public void onApplicationEvent(HttpSessionCreatedEvent httpSessionCreatedEvent) {
-		httpSessionCreatedEvent.getSession().setMaxInactiveInterval(maxInactiveInterval);
-	}
-
+  @Override
+  public void onApplicationEvent(HttpSessionCreatedEvent httpSessionCreatedEvent) {
+    httpSessionCreatedEvent.getSession().setMaxInactiveInterval(maxInactiveInterval);
+  }
 }

@@ -12,8 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = true)
 public class Column {
 
-	String name;
-	boolean sortable;
-	boolean filterable;
-
+  String name;
+  boolean sortable;
+  boolean filterable;
 }
