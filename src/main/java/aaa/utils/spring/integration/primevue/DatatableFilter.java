@@ -9,9 +9,13 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 import aaa.utils.spring.integration.jpa.IAbstractPOJO;
 import aaa.utils.spring.integration.jpa.QueryParams;
+import aaa.utils.spring.integration.jpa.SpecificationValuedMaker;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Streams;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.*;
 import org.springframework.data.domain.PageRequest;
@@ -47,16 +51,17 @@ public class DatatableFilter<T extends IAbstractPOJO> {
   @NoArgsConstructor
   @Getter
   @Setter
-  public static class FieldConstraint {
+  public static class FieldConstraint implements SpecificationValuedMaker {
     Object value;
     String matchMode;
 
-    public boolean isValueProvided() {
-      return value != null && !(value instanceof String stringValue && isBlank(stringValue));
+    @Override
+    public Specification makeSpecification(Function<Root, Path> field) {
+      return MatchMode.of(matchMode).map(mode -> mode.makeSpecification(field, value)).orElse(null);
     }
 
-    public Specification makeSpecificationForField(String field) {
-      return MatchMode.of(matchMode).map(mode -> mode.makeSpecification(field, value)).orElse(null);
+    public boolean isValueProvided() {
+      return value != null && !(value instanceof String stringValue && isBlank(stringValue));
     }
   }
 
@@ -64,7 +69,7 @@ public class DatatableFilter<T extends IAbstractPOJO> {
   @NoArgsConstructor
   @Getter
   @Setter
-  public static class FieldFilter extends FieldConstraint {
+  public static class FieldFilter extends DatatableFilter.FieldConstraint {
 
     String operator;
 
@@ -119,8 +124,7 @@ public class DatatableFilter<T extends IAbstractPOJO> {
                                               .filter(FieldConstraint::isValueProvided)
                                               .map(
                                                   constraint ->
-                                                      constraint.makeSpecificationForField(
-                                                          e.getKey()))
+                                                      constraint.makeSpecification(e.getKey()))
                                               .filter(Objects::nonNull)
                                               .toList();
                                   return equalsIgnoreCase(

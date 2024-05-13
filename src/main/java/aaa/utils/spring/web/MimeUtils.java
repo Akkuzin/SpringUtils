@@ -3,6 +3,8 @@ package aaa.utils.spring.web;
 import static java.util.Optional.ofNullable;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
@@ -15,19 +17,25 @@ public class MimeUtils {
 
   private static final Detector DETECTOR = new DefaultDetector();
 
-  @SuppressWarnings("checkstyle:IllegalCatch")
   public static String getMimeType(byte[] data, String filename) {
+    return getMimeType(data == null ? null : new ByteArrayInputStream(data), filename);
+  }
+
+  public static String getMimeType(InputStream data, String filename) {
     try {
       Metadata metadata = new Metadata();
       metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, filename);
-      return ofNullable(
-              DETECTOR.detect(
-                  new ByteArrayInputStream(ofNullable(data).orElseGet(() -> new byte[] {})),
-                  metadata))
-          .map(String::valueOf)
-          .orElse("");
+      return ofNullable(DETECTOR.detect(data, metadata)).map(String::valueOf).orElse("");
     } catch (Throwable e) {
       return "";
+    } finally {
+      try {
+        if (data != null) {
+          data.reset();
+        }
+      } catch (IOException e) {
+        return "";
+      }
     }
   }
 

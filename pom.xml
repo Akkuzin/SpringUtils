@@ -1,40 +1,44 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>aaa.utils</groupId>
-	<artifactId>SpringUtils</artifactId>
-	<packaging>jar</packaging>
-	<version>2.0.0</version>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>aaa.utils</groupId>
+    <artifactId>SpringUtils</artifactId>
+    <packaging>jar</packaging>
+    <version>2.0.0</version>
 
-	<name>SpringUtils</name>
-	<url>https://github.com/Akkuzin/SpringUtils</url>
+    <name>SpringUtils</name>
+    <url>https://github.com/Akkuzin/SpringUtils</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
 
-		<java.version>17</java.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<lombok.version>1.18.32</lombok.version>
+        <lombok.version>1.18.32</lombok.version>
 
-		<Utils.version>2.0.0</Utils.version>
+        <Utils.version>2.0.0</Utils.version>
 
-		<spring-framework.version>6.1.5</spring-framework.version>
-        <spring-data.version>3.2.4</spring-data.version>
-		<spring-framework-security.version>6.2.3</spring-framework-security.version>
+        <spring-framework.version>6.1.5</spring-framework.version>
+        <spring-data.version>3.2.5</spring-data.version>
+        <spring-framework-security.version>6.2.3</spring-framework-security.version>
+        <micrometer.version>1.12.5</micrometer.version>
+        <aspectj.version>1.9.19</aspectj.version>
         <jakarta-persistence-api.version>3.1.0</jakarta-persistence-api.version>
-		<commons-lang.version>3.14.0</commons-lang.version>
-		<commons-fileupload.version>1.5</commons-fileupload.version>
-		<servlet.version>6.0.0</servlet.version>
+        <commons-lang.version>3.14.0</commons-lang.version>
+        <commons-fileupload.version>1.5</commons-fileupload.version>
+        <servlet.version>6.0.0</servlet.version>
         <jackson.version>2.17.0</jackson.version>
         <apache-tika.version>2.9.2</apache-tika.version>
         <hibernate.version>6.4.4.Final</hibernate.version>
+        <hypersistence.version>3.7.5</hypersistence.version>
+        <velocity.version>2.3</velocity.version>
 
-		<junit.version>5.10.2</junit.version>
+        <junit.version>5.10.2</junit.version>
         <assertj.version>3.25.3</assertj.version>
-	</properties>
+    </properties>
 
     <!--@formatter:off -->
 
@@ -49,17 +53,21 @@
         <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-jpa</artifactId><version>${spring-data.version}</version></dependency>
 		<dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-core</artifactId><version>${spring-framework-security.version}</version></dependency>
 		<dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-web</artifactId><version>${spring-framework-security.version}</version></dependency>
+        <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-core</artifactId><version>${micrometer.version}</version></dependency>
+        <dependency><groupId>org.aspectj</groupId><artifactId>aspectjrt</artifactId><version>${aspectj.version}</version></dependency>
         <dependency><groupId>org.hibernate.orm</groupId><artifactId>hibernate-core</artifactId><version>${hibernate.version}</version><scope>provided</scope></dependency>
+        <dependency><groupId>io.hypersistence</groupId><artifactId>hypersistence-utils-hibernate-63</artifactId><version>${hypersistence.version}</version></dependency>
         <dependency><groupId>jakarta.servlet</groupId><artifactId>jakarta.servlet-api</artifactId><version>${servlet.version}</version><scope>provided</scope></dependency>
         <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId><version>${jackson.version}</version><scope>provided</scope></dependency>
         <dependency><groupId>org.apache.tika</groupId><artifactId>tika-core</artifactId><version>${apache-tika.version}</version></dependency>
+        <dependency><groupId>org.apache.velocity</groupId><artifactId>velocity-engine-core</artifactId><version>${velocity.version}</version></dependency>
 	</dependencies>
 
     <!--@formatter:on -->
 
-	<build>
-		<finalName>SpringUtils</finalName>
-		<plugins>
+    <build>
+        <finalName>SpringUtils</finalName>
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -80,7 +88,7 @@
                     </execution>
                 </executions>
             </plugin>
-             <plugin>
+            <plugin>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>3.3.1</version>
                 <executions>
@@ -109,6 +117,6 @@
                     </execution>
                 </executions>
             </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 </project>

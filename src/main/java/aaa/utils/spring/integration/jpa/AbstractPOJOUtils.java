@@ -1,13 +1,16 @@
 package aaa.utils.spring.integration.jpa;
 
 import java.util.Objects;
-import lombok.extern.apachecommons.CommonsLog;
+import java.util.Optional;
 import org.hibernate.proxy.HibernateProxy;
-import org.springframework.stereotype.Component;
 
-@Component
-@CommonsLog
 public class AbstractPOJOUtils {
+
+  public static <T extends IAbstractPOJO> boolean pojoEquals(
+      Optional<T> first, Optional<T> second) {
+    return Objects.equals(first, second)
+        || (first.isPresent() && second.isPresent() && pojoEquals(first.get(), second.get()));
+  }
 
   public static <T extends IAbstractPOJO> boolean pojoEquals(T first, T second) {
     return first == second

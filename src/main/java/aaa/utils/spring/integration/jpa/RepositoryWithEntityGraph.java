@@ -2,6 +2,8 @@ package aaa.utils.spring.integration.jpa;
 
 import java.io.Serializable;
 import java.util.Optional;
+
+import io.hypersistence.utils.spring.repository.HibernateRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

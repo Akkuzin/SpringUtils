@@ -128,9 +128,9 @@ public class HttpUtils {
       response.setHeader(
           CONTENT_DISPOSITION,
           "attachment; " + makeContentDisposition(filename, lowerCase(userAgent)));
-      ServletOutputStream outputStream = response.getOutputStream();
-      FileCopyUtils.copy(data, outputStream);
-      outputStream.close();
+      try (ServletOutputStream outputStream = response.getOutputStream()) {
+        FileCopyUtils.copy(data, outputStream);
+      }
     }
 
     public void send(byte[] data) {

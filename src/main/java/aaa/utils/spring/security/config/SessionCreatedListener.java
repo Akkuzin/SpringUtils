@@ -1,15 +1,13 @@
 package aaa.utils.spring.security.config;
 
 import java.util.concurrent.TimeUnit;
-
-import org.springframework.context.ApplicationListener;
-import org.springframework.security.web.session.HttpSessionCreatedEvent;
-import org.springframework.stereotype.Component;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.context.ApplicationListener;
+import org.springframework.security.web.session.HttpSessionCreatedEvent;
+import org.springframework.stereotype.Component;
 
 @Component
 @Getter

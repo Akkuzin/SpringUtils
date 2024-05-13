@@ -29,8 +29,7 @@ public class ConfigUtils {
 
   public static CookieLocaleResolver makeLocaleResolver(
       String cookieName, String defaultLocaleCode) {
-    CookieLocaleResolver cookieLocaleResolver = new CookieLocaleResolver();
-    cookieLocaleResolver.setCookieName(cookieName);
+    CookieLocaleResolver cookieLocaleResolver = new CookieLocaleResolver(cookieName);
     cookieLocaleResolver.setDefaultLocale(new Locale(defaultLocaleCode));
     return cookieLocaleResolver;
   }

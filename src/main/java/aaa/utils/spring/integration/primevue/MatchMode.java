@@ -6,18 +6,17 @@ import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
-import static org.apache.commons.lang3.StringUtils.split;
 
+import aaa.format.SafeParse;
 import aaa.utils.spring.integration.jpa.IAbstractPOJO;
+import aaa.utils.spring.integration.jpa.JpaUtils.LikeMatchMode;
+import aaa.utils.spring.integration.jpa.SpecificationMaker;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaBuilder.In;
-import jakarta.persistence.criteria.From;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -39,7 +38,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.data.jpa.domain.Specification;
 
-public abstract class MatchMode {
+public abstract class MatchMode implements SpecificationMaker {
 
   @Getter final List<String> aliases;
 
@@ -65,11 +64,11 @@ public abstract class MatchMode {
   public static final MatchMode STARTS_WITH =
       new MatchMode(List.of("startsWith", "STARTS_WITH")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               stringCondition(
                   s -> cb.like(cb.lower(field.apply(root)), s),
-                  lowerCase((String) value) + "%",
+                  LikeMatchMode.STARTS_WITH.makeTemplate(lowerCase((String) value)),
                   cb);
         }
       };
@@ -77,11 +76,11 @@ public abstract class MatchMode {
   public static final MatchMode CONTAINS =
       new MatchMode(List.of("contains", "CONTAINS")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               stringCondition(
                   s -> cb.like(cb.lower(field.apply(root)), s),
-                  "%" + lowerCase((String) value) + "%",
+                  LikeMatchMode.ANYWHERE.makeTemplate(lowerCase((String) value)),
                   cb);
         }
       };
@@ -89,11 +88,11 @@ public abstract class MatchMode {
   public static final MatchMode NOT_CONTAINS =
       new MatchMode(List.of("notContains", "NOT_CONTAINS")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               stringCondition(
                   s -> cb.notLike(cb.lower(field.apply(root)), s),
-                  "%" + lowerCase((String) value) + "%",
+                  LikeMatchMode.ANYWHERE.makeTemplate(lowerCase((String) value)),
                   cb);
         }
       };
@@ -101,11 +100,11 @@ public abstract class MatchMode {
   public static final MatchMode ENDS_WITH =
       new MatchMode(List.of("endsWith", "ENDS_WITH")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               stringCondition(
                   s -> cb.like(cb.lower(field.apply(root)), s),
-                  "%" + lowerCase((String) value),
+                  LikeMatchMode.ENDS_WITH.makeTemplate(lowerCase((String) value)),
                   cb);
         }
       };
@@ -113,7 +112,7 @@ public abstract class MatchMode {
   public static final MatchMode EQUALS =
       new MatchMode(List.of("equals", "EQUALS")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               value instanceof String stringValue
                   ? stringCondition(
@@ -125,7 +124,7 @@ public abstract class MatchMode {
   public static final MatchMode NOT_EQUALS =
       new MatchMode(List.of("notEquals", "NOT_EQUALS")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               value instanceof String stringValue
                   ? stringCondition(
@@ -137,7 +136,7 @@ public abstract class MatchMode {
   public static final MatchMode IN =
       new MatchMode(List.of("in", "IN")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) -> {
             Class bindableJavaType = field.apply(root).getModel().getBindableJavaType();
             boolean isString = String.class.equals(bindableJavaType);
@@ -151,23 +150,21 @@ public abstract class MatchMode {
                 ((Map<String, Object>) mapValue)
                     .entrySet().stream()
                         .filter(
-                            e -> String.valueOf(((Map) e.getValue()).get("checked")).equals("true"))
-                        .map(
-                            e -> {
-                              try {
-                                return Long.parseLong(e.getKey());
-                              } catch (NumberFormatException ex) {
-                                return null;
-                              }
-                            })
+                            e ->
+                                String.valueOf(((Map) e.getValue()).get("checked"))
+                                    .equals("true")) // PrimeVUE -> TreeSelect
+                        .map(e -> SafeParse.parseLong(e.getKey(), null))
                         .filter(Objects::nonNull)
                         .forEach(id -> in.value(id));
               } else if (value instanceof Collection<?> collectionValue) {
                 collectionValue.stream()
-                    .forEach(
-                        i -> {
-                          in.value(((Map) i).get("id"));
-                        });
+                    .map(
+                        item ->
+                            item instanceof Map mapItem
+                                ? mapItem.get("id")
+                                : SafeParse.parseLong(String.valueOf(item), null))
+                    .filter(Objects::nonNull)
+                    .forEach(in::value);
               }
             } else {
               Stream.ofNullable(value)
@@ -189,7 +186,7 @@ public abstract class MatchMode {
   public static final MatchMode LESS_THAN =
       new MatchMode(List.of("lt", "LESS_THAN")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) -> cb.lessThan(field.apply(root), (Comparable) value);
         }
       };
@@ -197,7 +194,7 @@ public abstract class MatchMode {
   public static final MatchMode LESS_THAN_OR_EQUAL_TO =
       new MatchMode(List.of("lte", "LESS_THAN_OR_EQUAL_TO")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) -> cb.lessThanOrEqualTo(field.apply(root), (Comparable) value);
         }
       };
@@ -205,7 +202,7 @@ public abstract class MatchMode {
   public static final MatchMode GREATER_THAN =
       new MatchMode(List.of("gt", "GREATER_THAN")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) -> cb.greaterThan(field.apply(root), (Comparable) value);
         }
       };
@@ -213,7 +210,7 @@ public abstract class MatchMode {
   public static final MatchMode GREATER_THAN_OR_EQUAL_TO =
       new MatchMode(List.of("gte", "GREATER_THAN_OR_EQUAL_TO")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return (root, query, cb) ->
               cb.greaterThanOrEqualTo(field.apply(root), (Comparable) value);
         }
@@ -221,7 +218,7 @@ public abstract class MatchMode {
 
   public static final MatchMode BETWEEN =
       new MatchMode(List.of("between", "BETWEEN")) {
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           if (value instanceof List listValue) {
             return Specification.allOf(
                 GREATER_THAN_OR_EQUAL_TO.makeSpecification(field, listValue.get(0)),
@@ -235,7 +232,7 @@ public abstract class MatchMode {
   public static final MatchMode DATE_IS =
       new MatchMode(List.of("dateIs", "DATE_IS")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return parseDateTime((String) value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
@@ -251,7 +248,7 @@ public abstract class MatchMode {
   public static final MatchMode DATE_IS_NOT =
       new MatchMode(List.of("dateIsNot", "DATE_IS_NOT")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return parseDateTime((String) value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
@@ -267,7 +264,7 @@ public abstract class MatchMode {
   public static final MatchMode DATE_BEFORE =
       new MatchMode(List.of("dateBefore", "DATE_BEFORE")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return parseDateTime((String) value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(date -> (root, query, cb) -> cb.lessThan(field.apply(root), date))
@@ -278,7 +275,20 @@ public abstract class MatchMode {
   public static final MatchMode DATE_AFTER =
       new MatchMode(List.of("dateAfter", "DATE_AFTER")) {
         @Override
-        Specification makeSpecification(Function<Root, Path> field, Object value) {
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
+          return parseDateTime((String) value)
+              .map(LocalDateTime::toLocalDate)
+              .<Specification>map(
+                  date ->
+                      (root, query, cb) ->
+                          cb.greaterThanOrEqualTo(field.apply(root), date.plusDays(1)))
+              .orElse(null);
+        }
+      };
+  public static final MatchMode DATE_BETWEEN =
+      new MatchMode(List.of("dateBetween", "DATE_BETWEEN")) {
+        @Override
+        public Specification makeSpecification(Function<Root, Path> field, Object value) {
           return parseDateTime((String) value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
@@ -333,28 +343,10 @@ public abstract class MatchMode {
     return empty();
   }
 
-  final Specification makeSpecification(String field, Object value) {
-    return makeSpecification(
-        root -> {
-          if (isBlank(field)) {
-            return root;
-          }
-          From currentJoin = root;
-          String[] parts = split(field, ".");
-          for (int i = 0; i < parts.length - 1; i++) {
-            currentJoin = currentJoin.join(parts[i], JoinType.LEFT);
-          }
-          return currentJoin.get(parts[parts.length - 1]);
-        },
-        value);
-  }
-
   static Predicate stringCondition(
       Function<String, Predicate> condition, String value, CriteriaBuilder cb) {
     return cb.or(variateFix(value).map(condition).toArray(Predicate[]::new));
   }
-
-  abstract Specification makeSpecification(Function<Root, Path> field, Object value);
 
   public static Optional<MatchMode> of(String name) {
     return ofNullable(MATCH_MODES.get(name));

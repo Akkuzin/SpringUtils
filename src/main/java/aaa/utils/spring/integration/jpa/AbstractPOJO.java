@@ -5,7 +5,8 @@ import static java.util.Optional.ofNullable;
 import jakarta.persistence.Transient;
 import java.io.Serializable;
 
-public abstract class AbstractPOJO implements IAbstractPOJO<Long>, Cloneable, Serializable {
+public abstract class AbstractPOJO<ID extends Serializable & Comparable<ID>>
+    implements IAbstractPOJO<ID>, Cloneable, Serializable {
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -13,7 +14,7 @@ public abstract class AbstractPOJO implements IAbstractPOJO<Long>, Cloneable, Se
   }
 
   @Override
-  public abstract Long getId();
+  public abstract ID getId();
 
   @Override
   @Transient

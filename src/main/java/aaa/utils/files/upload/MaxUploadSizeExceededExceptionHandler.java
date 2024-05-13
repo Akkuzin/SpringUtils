@@ -19,7 +19,7 @@ public class MaxUploadSizeExceededExceptionHandler implements HandlerExceptionRe
 
   public static final long DEFAULT_MAX_SIZE = 10L;
 
-  @Setter @Getter Long maxLengthInMegabytes = DEFAULT_MAX_SIZE;
+  @Setter @Getter @Builder.Default Long maxLengthInMegabytes = DEFAULT_MAX_SIZE;
 
   public void setMaxLengthInBytes(long length) {
     this.maxLengthInMegabytes = length / FileUtils.ONE_MB;

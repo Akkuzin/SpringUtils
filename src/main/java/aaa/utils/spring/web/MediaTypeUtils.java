@@ -6,7 +6,7 @@ import org.springframework.http.MediaType;
 
 public class MediaTypeUtils {
 
-  static final String CHARSET = ";charset=" + CharEncoding.UTF_8;
+  static final String CHARSET = ";charset=" + StandardCharsets.UTF_8;
 
   public static final MediaType APPLICATION_XML =
       new MediaType(

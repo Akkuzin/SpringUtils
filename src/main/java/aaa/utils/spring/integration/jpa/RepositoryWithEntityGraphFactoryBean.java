@@ -3,6 +3,7 @@ package aaa.utils.spring.integration.jpa;
 import jakarta.persistence.EntityManager;
 import java.io.Serializable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -30,7 +31,9 @@ public class RepositoryWithEntityGraphFactoryBean<
     }
 
     protected Object getTargetRepository(RepositoryMetadata metadata) {
-      return new RepositoryWithEntityGraphImpl(metadata.getDomainType(), entityManager);
+      return new RepositoryWithEntityGraphImpl(
+          JpaEntityInformationSupport.getEntityInformation(metadata.getDomainType(), entityManager),
+          entityManager);
     }
 
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
