@@ -1,5 +1,9 @@
 package aaa.utils.spring.metrics;
 
+import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.CollectionStatistics;
@@ -13,9 +17,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ManagedResource("Statistics:name=HibernateStatistics")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
 public class HibernateStatistics {
 
-  @Autowired SessionFactory sessionFactory;
+  SessionFactory sessionFactory;
 
   @ManagedOperation
   public void clear() {
@@ -163,8 +169,8 @@ public class HibernateStatistics {
   }
 
   @ManagedAttribute
-  public long getStartTime() {
-    return sessionFactory.getStatistics().getStartTime();
+  public Instant getStart() {
+    return sessionFactory.getStatistics().getStart();
   }
 
   @ManagedAttribute

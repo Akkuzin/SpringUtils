@@ -39,7 +39,7 @@ public class ServiceExceptionFactory {
   }
 
   public synchronized ServiceExceptionFactory addError(
-      String errorCode, Map<String, ? extends Object> parameterMap, String defaultMessage) {
+      String errorCode, Map<String, ?> parameterMap, String defaultMessage) {
     errors.reject(
         errorCode,
         parameterMap == null ? new Object[] {} : new Object[] {parameterMap},

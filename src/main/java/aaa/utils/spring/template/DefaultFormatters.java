@@ -1,7 +1,11 @@
 package aaa.utils.spring.template;
 
 import java.math.RoundingMode;
-import java.text.*;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -23,26 +27,26 @@ public final class DefaultFormatters {
     }
   }
 
-  private static final ThreadLocal<NumberFormat> DEFAULT_DOUBLE_FORMAT_HOLDER =
-      NotSettableThreadLocal.withInitial(() -> makeDefaultDoubleFormat());
+  private static final ThreadLocal<NumberFormat> DEFAULT_NUMBER_FORMAT_HOLDER =
+      NotSettableThreadLocal.withInitial(() -> makeDefaultNumberFormat());
   private static final ThreadLocal<DateFormat> XML_DATE_FORMAT_HOLDER =
       NotSettableThreadLocal.withInitial(() -> makeXMLDateTimeFormat());
-  private static final ThreadLocal<NumberFormat> DOUBLE_STRIPPING_FORMAT_HOLDER =
-      NotSettableThreadLocal.withInitial(() -> makeDoubleStrippingFormat());
-  private static final ThreadLocal<NumberFormat> DOUBLE_NON_STRIPPING_FORMAT_HOLDER =
-      NotSettableThreadLocal.withInitial(() -> makeDoubleNonStrippingFormat());
+  private static final ThreadLocal<NumberFormat> NUMBER_STRIPPING_FORMAT_HOLDER =
+      NotSettableThreadLocal.withInitial(() -> makeNumberStrippingFormat());
+  private static final ThreadLocal<NumberFormat> NUMBER_NON_STRIPPING_FORMAT_HOLDER =
+      NotSettableThreadLocal.withInitial(() -> makeNumberNonStrippingFormat());
   private static final ThreadLocal<NumberFormat> NATURAL_NUMBER_FORMAT_HOLDER =
       NotSettableThreadLocal.withInitial(() -> makeNaturalNumberFormat());
 
   public static NumberFormat makeNaturalNumberFormat() {
-    return makeDefaultDoubleFormat(0);
+    return makeDefaultNumberFormat(0);
   }
 
-  public static NumberFormat makeDefaultDoubleFormat() {
-    return makeDefaultDoubleFormat(2);
+  public static NumberFormat makeDefaultNumberFormat() {
+    return makeDefaultNumberFormat(2);
   }
 
-  public static NumberFormat makeDefaultDoubleFormat(int digitsAfterComma) {
+  public static NumberFormat makeDefaultNumberFormat(int digitsAfterComma) {
     NumberFormat result = new DecimalFormat("###,###.##", makeDecimalFormatSymbols());
     result.setMinimumFractionDigits(digitsAfterComma);
     result.setMaximumFractionDigits(digitsAfterComma);
@@ -51,13 +55,13 @@ public final class DefaultFormatters {
     return result;
   }
 
-  public static NumberFormat makeNoGroupingDoubleFormat(int digitsAfterComma) {
-    NumberFormat result = makeDefaultDoubleFormat(digitsAfterComma);
+  public static NumberFormat makeNoGroupingNumberFormat(int digitsAfterComma) {
+    NumberFormat result = makeDefaultNumberFormat(digitsAfterComma);
     result.setGroupingUsed(false);
     return result;
   }
 
-  public static NumberFormat makeExcelDoubleFormat(int digitsAfterComma) {
+  public static NumberFormat makeExcelNumberFormat(int digitsAfterComma) {
     NumberFormat result = new DecimalFormat("###,###.##", makeExcelFormatSymbols());
     result.setMinimumFractionDigits(digitsAfterComma);
     result.setMaximumFractionDigits(digitsAfterComma);
@@ -80,8 +84,8 @@ public final class DefaultFormatters {
     return decimalFormatSymbols;
   }
 
-  public static NumberFormat getDefaultDoubleFormat() {
-    return DEFAULT_DOUBLE_FORMAT_HOLDER.get();
+  public static NumberFormat getDefaultNumberFormat() {
+    return DEFAULT_NUMBER_FORMAT_HOLDER.get();
   }
 
   public static DateFormat makeDefaultDateFormat() {
@@ -160,22 +164,22 @@ public final class DefaultFormatters {
     return result;
   }
 
-  public static NumberFormat makeDoubleStrippingFormat() {
-    NumberFormat result = makeNoGroupingDoubleFormat(2);
+  public static NumberFormat makeNumberStrippingFormat() {
+    NumberFormat result = makeNoGroupingNumberFormat(2);
     result.setMinimumFractionDigits(0);
     return result;
   }
 
-  public static NumberFormat getDoubleStrippingFormat() {
-    return DOUBLE_STRIPPING_FORMAT_HOLDER.get();
+  public static NumberFormat getNumberStrippingFormat() {
+    return NUMBER_STRIPPING_FORMAT_HOLDER.get();
   }
 
-  public static NumberFormat makeDoubleNonStrippingFormat() {
-    return makeNoGroupingDoubleFormat(2);
+  public static NumberFormat makeNumberNonStrippingFormat() {
+    return makeNoGroupingNumberFormat(2);
   }
 
-  public static NumberFormat getDoubleNonStrippingFormat() {
-    return DOUBLE_NON_STRIPPING_FORMAT_HOLDER.get();
+  public static NumberFormat getNumberNonStrippingFormat() {
+    return NUMBER_NON_STRIPPING_FORMAT_HOLDER.get();
   }
 
   public static NumberFormat getNaturalNumberFormat() {

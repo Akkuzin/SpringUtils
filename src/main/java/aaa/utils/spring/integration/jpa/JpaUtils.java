@@ -210,8 +210,8 @@ public class JpaUtils {
                     .forEach(
                         nestedSubgraph -> {
                           if (fieldValue instanceof Collection collection) {
-                            collection.stream()
-                                .forEach(subValue -> selectSubgraph(subValue, nestedSubgraph));
+                            collection.forEach(
+                                subValue -> selectSubgraph(subValue, nestedSubgraph));
                           } else {
                             selectSubgraph(fieldValue, nestedSubgraph);
                           }

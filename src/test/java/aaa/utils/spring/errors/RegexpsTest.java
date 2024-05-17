@@ -3,7 +3,8 @@ package aaa.utils.spring.errors;
 import static aaa.utils.spring.errors.Regexps.EMAILS_PATTERN;
 import static aaa.utils.spring.errors.Regexps.isMatches;
 import static aaa.utils.spring.errors.Regexps.validateEmail;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 

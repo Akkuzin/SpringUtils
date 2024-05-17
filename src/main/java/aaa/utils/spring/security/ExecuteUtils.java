@@ -23,12 +23,7 @@ public class ExecuteUtils {
   }
 
   public static <V> CustomCallable<V, RuntimeException> fromLambda(Supplier<V> lambda) {
-    return new CustomCallable<V, RuntimeException>() {
-      @Override
-      public V call() {
-        return lambda.get();
-      }
-    };
+    return () -> lambda.get();
   }
 
   public interface CustomRunnable<E extends Exception> {
@@ -49,12 +44,7 @@ public class ExecuteUtils {
   public <V> V doCallSneaky(Callable<V> callable) {
     return execWithAuth(
         authentication,
-        new CustomCallable<V, Exception>() {
-          @Override
-          public V call() throws Exception {
-            return callable.call();
-          }
-        });
+        () -> callable.call());
   }
 
   public <V, E extends Exception> void doRun(CustomCallable<Void, E> callable) throws E {
@@ -64,12 +54,9 @@ public class ExecuteUtils {
   public <E extends Exception> void doRun(CustomRunnable<E> runnable) throws E {
     execWithAuth(
         authentication,
-        new CustomCallable<Void, E>() {
-          @Override
-          public Void call() throws E {
-            runnable.run();
-            return null;
-          }
+        (CustomCallable<Void, E>) () -> {
+          runnable.run();
+          return null;
         });
   }
 
@@ -134,12 +121,10 @@ public class ExecuteUtils {
   public static void execWithAuth(Authentication providedAuthentication, Runnable runnable) {
     execWithAuth(
         providedAuthentication,
-        new CustomCallable<Void, Exception>() {
-          @Override
-          public Void call() throws Exception {
-            runnable.run();
-            return null;
-          }
-        });
+        (CustomCallable<Void, Exception>)
+            () -> {
+              runnable.run();
+              return null;
+            });
   }
 }

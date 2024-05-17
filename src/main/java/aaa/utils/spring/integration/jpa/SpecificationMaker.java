@@ -1,6 +1,5 @@
 package aaa.utils.spring.integration.jpa;
 
-import static org.apache.commons.lang3.StringUtils.split;
 
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
@@ -13,6 +12,5 @@ public interface SpecificationMaker {
     return makeSpecification(JpaUtils.makePathResolver(field), value);
   }
 
-  abstract Specification makeSpecification(Function<Root, Path> field, Object value);
-
+  Specification makeSpecification(Function<Root, Path> field, Object value);
 }

@@ -24,6 +24,6 @@ public class DatatablesResponse<T> {
         .iTotalRecords(dataSet.totalRecords)
         .iTotalDisplayRecords(dataSet.getTotalDisplayRecords())
         .sEcho(echo)
-        .<T>build();
+        .build();
   }
 }

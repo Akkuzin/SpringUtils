@@ -11,7 +11,7 @@ public interface SpecificationValuedMaker {
     return makeSpecification(JpaUtils.makePathResolver(field));
   }
 
-  abstract Specification makeSpecification(Function<Root, Path> field);
+  Specification makeSpecification(Function<Root, Path> field);
 
   boolean isValueProvided();
 }

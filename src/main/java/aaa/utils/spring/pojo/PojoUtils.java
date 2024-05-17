@@ -15,7 +15,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -104,7 +109,7 @@ public class PojoUtils {
       r1 = filter.test(r1) ? r1 : null;
       r2 = filter.test(r2) ? r2 : null;
       return ofNullable(
-              r1 == null ? r2 == null ? null : r2 : r2 == null ? r1 : operation.apply(r1, r2))
+              r1 == null ? r2 : r2 == null ? r1 : operation.apply(r1, r2))
           .orElse(defaultValue);
     }
 

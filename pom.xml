@@ -19,20 +19,19 @@
 
         <lombok.version>1.18.32</lombok.version>
 
-        <Utils.version>2.0.0</Utils.version>
+        <aaa-utils.version>2.0.0</aaa-utils.version>
 
-        <spring-framework.version>6.1.5</spring-framework.version>
+        <spring-framework.version>6.1.6</spring-framework.version>
         <spring-data.version>3.2.5</spring-data.version>
-        <spring-framework-security.version>6.2.3</spring-framework-security.version>
-        <micrometer.version>1.12.5</micrometer.version>
-        <aspectj.version>1.9.19</aspectj.version>
+        <spring-framework-security.version>6.2.4</spring-framework-security.version>
+        <micrometer.version>1.13.0</micrometer.version>
+        <aspectj.version>1.9.22.1</aspectj.version>
         <jakarta-persistence-api.version>3.1.0</jakarta-persistence-api.version>
         <commons-lang.version>3.14.0</commons-lang.version>
-        <commons-fileupload.version>1.5</commons-fileupload.version>
         <servlet.version>6.0.0</servlet.version>
-        <jackson.version>2.17.0</jackson.version>
+        <jackson.version>2.17.1</jackson.version>
         <apache-tika.version>2.9.2</apache-tika.version>
-        <hibernate.version>6.4.4.Final</hibernate.version>
+        <hibernate.version>6.4.8.Final</hibernate.version>
         <hypersistence.version>3.7.5</hypersistence.version>
         <velocity.version>2.3</velocity.version>
 
@@ -44,7 +43,7 @@
 
 	<dependencies>
 		<dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>${lombok.version}</version></dependency>
-		<dependency><groupId>aaa.utils</groupId><artifactId>Utils</artifactId><version>${Utils.version}</version></dependency>
+		<dependency><groupId>aaa.utils</groupId><artifactId>Utils</artifactId><version>${aaa-utils.version}</version></dependency>
 		<dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version><scope>test</scope></dependency>
         <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>${assertj.version}</version><scope>test</scope></dependency>
 		<dependency><groupId>org.apache.commons</groupId><artifactId>commons-lang3</artifactId><version>${commons-lang.version}</version></dependency>

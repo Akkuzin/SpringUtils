@@ -12,7 +12,11 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
@@ -41,7 +45,7 @@ public class ExecutionStatistics {
 
     public String getShortName() {
       String[] split = split(name, ".");
-      return Stream.of(subarray(split, split.length - 2, split.length)).collect(joining("."));
+      return String.join(".", subarray(split, split.length - 2, split.length));
     }
 
     public synchronized void addExecution(long time) {

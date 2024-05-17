@@ -134,7 +134,7 @@ class PojoUtilsTest {
                           .desc(String.valueOf(random.nextLong()))
                           .mode(random.nextBoolean())
                           .build())
-              .collect(toList());
+              .toList();
       assertEquals(
           data.stream().reduce(Data.SUMMATOR_MANUAL).get(),
           data.stream().reduce(Data.SUMMATOR).get());

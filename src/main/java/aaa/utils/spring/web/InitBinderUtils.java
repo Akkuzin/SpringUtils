@@ -16,7 +16,7 @@ public class InitBinderUtils {
     return Stream.of(blocks).flatMap(Stream::of).toArray(String[]::new);
   }
 
-  public static final void addAllowedFields(DataBinder binder, String... additionFields) {
+  public static void addAllowedFields(DataBinder binder, String... additionFields) {
     binder.setAllowedFields(concatFields(binder.getAllowedFields(), additionFields));
   }
 

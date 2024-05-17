@@ -53,7 +53,7 @@ public abstract class MatchMode implements SpecificationMaker {
 
   static Map<String, MatchMode> MATCH_MODES;
 
-  public static final void addMatchMode(MatchMode... matchModes) {
+  public static void addMatchMode(MatchMode... matchModes) {
     Builder<String, MatchMode> builder =
         ImmutableMap.<String, MatchMode>builder().putAll(nvl(MATCH_MODES, emptyMap()));
     Stream.of(matchModes)
@@ -233,7 +233,7 @@ public abstract class MatchMode implements SpecificationMaker {
       new MatchMode(List.of("dateIs", "DATE_IS")) {
         @Override
         public Specification makeSpecification(Function<Root, Path> field, Object value) {
-          return parseDateTime((String) value)
+          return parseDateTime(value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
                   date ->
@@ -249,7 +249,7 @@ public abstract class MatchMode implements SpecificationMaker {
       new MatchMode(List.of("dateIsNot", "DATE_IS_NOT")) {
         @Override
         public Specification makeSpecification(Function<Root, Path> field, Object value) {
-          return parseDateTime((String) value)
+          return parseDateTime(value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
                   date ->
@@ -265,7 +265,7 @@ public abstract class MatchMode implements SpecificationMaker {
       new MatchMode(List.of("dateBefore", "DATE_BEFORE")) {
         @Override
         public Specification makeSpecification(Function<Root, Path> field, Object value) {
-          return parseDateTime((String) value)
+          return parseDateTime(value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(date -> (root, query, cb) -> cb.lessThan(field.apply(root), date))
               .orElse(null);
@@ -276,7 +276,7 @@ public abstract class MatchMode implements SpecificationMaker {
       new MatchMode(List.of("dateAfter", "DATE_AFTER")) {
         @Override
         public Specification makeSpecification(Function<Root, Path> field, Object value) {
-          return parseDateTime((String) value)
+          return parseDateTime(value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
                   date ->
@@ -289,7 +289,7 @@ public abstract class MatchMode implements SpecificationMaker {
       new MatchMode(List.of("dateBetween", "DATE_BETWEEN")) {
         @Override
         public Specification makeSpecification(Function<Root, Path> field, Object value) {
-          return parseDateTime((String) value)
+          return parseDateTime(value)
               .map(LocalDateTime::toLocalDate)
               .<Specification>map(
                   date ->

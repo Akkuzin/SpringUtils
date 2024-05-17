@@ -32,7 +32,7 @@ public class HttpUtils {
 
   protected static String makeContentDisposition(String filename, String userAgent)
       throws UnsupportedEncodingException {
-    String filenameHeader = null;
+    String filenameHeader;
     // To inspect details for the below code, see http://greenbytes.de/tech/tc2231/
 
     String preparedName = UrlUtils.prepareString(filename, FILENAME_ENCODING, null);

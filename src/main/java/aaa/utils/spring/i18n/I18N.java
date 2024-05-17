@@ -1,7 +1,9 @@
 package aaa.utils.spring.i18n;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
+import aaa.i18n.I18NResolver;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.Locale;
@@ -11,7 +13,7 @@ import org.springframework.context.MessageSource;
 
 @AllArgsConstructor
 @FieldDefaults(makeFinal = true)
-public class I18N {
+public class I18N implements I18NResolver {
 
   Locale locale;
   MessageSource messageSource;
@@ -23,8 +25,8 @@ public class I18N {
 
   // CHECKSTYLE:ON
 
-  public String resolveCode(String code) {
-    return messageSource.getMessage(code, null, locale);
+  public String resolveCode(String code, String defaultValue) {
+    return defaultIfBlank(messageSource.getMessage(code, null, locale), defaultValue);
   }
 
   public String resolveField(SingularAttribute<?, ?> attribute) {

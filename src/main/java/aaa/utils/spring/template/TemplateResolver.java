@@ -4,10 +4,14 @@ import static aaa.nvl.Nvl.nvlGet;
 import static aaa.utils.spring.integration.jpa.AbstractPOJOUtils.getPojoClass;
 import static java.util.Collections.emptySet;
 import static java.util.Map.entry;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.substring;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
+import aaa.i18n.I18NResolver;
 import aaa.nvl.Nvl;
+import aaa.template.ITemplateResolver;
 import aaa.utils.spring.i18n.I18N;
 import com.google.common.collect.Streams;
 import java.io.InputStream;
@@ -20,7 +24,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,15 +40,18 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.beans.MethodInvocationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class TemplateResolver {
+@FieldDefaults(makeFinal = true)
+@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
+public class TemplateResolver implements ITemplateResolver {
 
   private static final VelocityEngine VELOCITY_ENGINE = makeEngine();
 
-  @Autowired MessageSource messageSource;
+  MessageSource messageSource;
 
   private static VelocityEngine makeEngine() {
     VelocityEngine engine = null;
@@ -53,7 +64,7 @@ public class TemplateResolver {
       // CHECKSTYLE:OFF
     } catch (Exception e) {
       // CHECKSTYLE:ON
-      log.error("Ошибка инициализации шаблонизатора системы", e);
+      log.error("Ошибка инициализации шаблонизатора", e);
     }
     return engine;
   }
@@ -74,13 +85,9 @@ public class TemplateResolver {
   }
 
   public I18N makeI18N() {
-    return makeI18N(new Locale("ru"));
-  }
-
-  @AllArgsConstructor
-  public static class SpecialFormatters {
-
-    I18N i18n;
+    return makeI18N(
+        ofNullable(LocaleContextHolder.getLocale())
+            .orElseGet(I18NResolver.DEFAULT_I18N::toJavaLocale));
   }
 
   public String resolveI18n(String message, Object[] beans, Locale locale) {
@@ -134,16 +141,35 @@ public class TemplateResolver {
             Map.ofEntries(
                 entry("dateFormat", DefaultFormatters.getDefaultDateFormatter()),
                 entry("dateTimeFormat", DefaultFormatters.getDefaultDateTimeFormatter()),
-                entry("doubleFormat", DefaultFormatters.getDefaultDoubleFormat()),
+                entry("numberFormat", DefaultFormatters.getDefaultNumberFormat()),
                 entry("nvl", Nvl.class),
                 entry("stringUtils", StringUtils.class))));
   }
 
   protected void populateWorkingContext(Context context, I18N i18n) {
     context.put("R", new TemplateResolverSupport(i18n));
-    context.put("special", new SpecialFormatters(i18n));
     context.put("i18n", i18n);
     context.put("currentDate", new Date());
+  }
+
+  public TemplateResolverI18N withI18N(I18N i18n) {
+    return new TemplateResolverI18N(i18n);
+  }
+
+  @AllArgsConstructor
+  public class TemplateResolverI18N implements ITemplateResolver {
+
+    I18N i18n;
+
+    @Override
+    public String resolveTemplate(String message, Map<String, Object> beans) {
+      return resolveI18n(message, beans, i18n);
+    }
+  }
+
+  @Override
+  public String resolveTemplate(String message, Map<String, Object> beans) {
+    return resolveI18n(message, beans, makeI18N(I18NResolver.DEFAULT_I18N.toJavaLocale()));
   }
 
   public String resolveI18n(String message, Map<String, Object> beans, I18N i18n) {
@@ -163,7 +189,7 @@ public class TemplateResolver {
     try {
       VELOCITY_ENGINE.evaluate(context, writer, "Message template resolvers", message);
     } catch (ParseErrorException | MethodInvocationException | ResourceNotFoundException e) {
-      log.warn("Ошибка при разрешении шаблона сообщения " + message, e);
+      log.warn("Ошибка при разрешении шаблона сообщения " + substring(message, 0, 200), e);
     }
     return writer.toString();
   }

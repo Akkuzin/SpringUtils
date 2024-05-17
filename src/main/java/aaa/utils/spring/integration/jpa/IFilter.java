@@ -56,7 +56,7 @@ public interface IFilter<T extends IAbstractPOJO> extends Specification<T> {
       return ofNullable(value).filter(StringUtils::isNotBlank);
     }
 
-    public <T> Optional<T> forValue(T value) {
+    public <S> Optional<S> forValue(S value) {
       return ofNullable(value);
     }
 

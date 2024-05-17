@@ -1,7 +1,7 @@
 package aaa.utils.spring.web;
 
 import static aaa.utils.spring.web.MimeUtils.getMimeType;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
