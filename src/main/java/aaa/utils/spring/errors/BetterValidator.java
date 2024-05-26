@@ -1,6 +1,7 @@
 package aaa.utils.spring.errors;
 
-import static aaa.utils.spring.errors.IntrospectionUtils.asGetter;
+import static aaa.lang.reflection.IntrospectionUtils.asGetter;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 import aaa.lang.reflection.ReflectionUtils;
@@ -9,13 +10,12 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
+import java.time.temporal.Temporal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -78,7 +78,8 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
                       .start());
     }
 
-    public FieldValidatorTemporal forTemporal(Function<T, LocalDate> getter, String fieldName) {
+    public FieldValidatorTemporal forTemporal(
+        Function<T, ? extends Temporal> getter, String fieldName) {
       return (FieldValidatorTemporal)
           cache.computeIfAbsent(
               fieldName,
@@ -119,7 +120,7 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
       if (validator == null || getter == null || fieldName == null) {
         return;
       }
-      Optional.ofNullable(getter.apply(entity))
+      ofNullable(getter.apply(entity))
           .ifPresent(
               fieldValue -> {
                 try {
@@ -141,6 +142,10 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
 
     public FieldValidatorDate forDate(SingularAttribute<T, Date> attribute) {
       return forDate(asGetter(attribute), attribute.getName());
+    }
+
+    public FieldValidatorTemporal forTemporal(SingularAttribute<T, ? extends Temporal> attribute) {
+      return forTemporal(asGetter(attribute), attribute.getName());
     }
 
     public FieldValidatorLong forLong(SingularAttribute<T, Long> attribute) {
@@ -167,7 +172,7 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
       return forDate(getter, getterPropertyResolver.resolveName(getter));
     }
 
-    public FieldValidatorTemporal forTemporal(Function<T, LocalDate> getter) {
+    public FieldValidatorTemporal forTemporal(Function<T, ? extends Temporal> getter) {
       return forTemporal(getter, getterPropertyResolver.resolveName(getter));
     }
 
@@ -187,8 +192,7 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
       if (validator == null || attribute == null) {
         return;
       }
-      Optional.ofNullable(
-              ReflectionUtils.<T, List<V>>asGetter(attribute.getJavaMember()).apply(entity))
+      ofNullable(ReflectionUtils.<T, List<V>>asGetter(attribute.getJavaMember()).apply(entity))
           .ifPresent(
               list -> {
                 for (ListIterator<V> iterator = list.listIterator(); iterator.hasNext(); ) {
@@ -205,12 +209,12 @@ public abstract class BetterValidator<T> extends BaseValidator<T> {
       if (consumer == null || attribute == null) {
         return;
       }
-      Optional.ofNullable(asGetter(attribute).apply(entity))
+      ofNullable(asGetter(attribute).apply(entity))
           .ifPresent(
               fieldValue -> {
                 try {
                   errors.pushNestedPath(attribute.getName());
-                  new BetterValidator<V>(attribute.getJavaType()) {
+                  new BetterValidator<>(attribute.getJavaType()) {
                     @Override
                     public void validate(Context context) {
                       consumer.accept(context);

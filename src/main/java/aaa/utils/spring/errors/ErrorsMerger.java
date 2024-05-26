@@ -1,48 +1,41 @@
 package aaa.utils.spring.errors;
 
+import static com.google.common.collect.Streams.concat;
+import static java.util.stream.Collectors.joining;
+
 import aaa.basis.text.StringFunc;
 import aaa.lang.reflection.ReflectionUtils;
 import aaa.lang.reflection.ReflectionUtils.SerializableBiConsumer;
 import aaa.lang.reflection.ReflectionUtils.SerializableFunction;
 import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
 
 public class ErrorsMerger {
 
   private static final String DELIMITER = ".";
 
-  /**
-   * Append errors messages
-   *
-   * @param errors Main errors collection
-   * @param newErrors Additional errors collection
-   * @param relativePath Path of newErrors object in errors object
-   */
+  /** Append errors messages */
   public static void mergeErrors(Errors errors, Errors newErrors, String relativePath) {
-    // Global errors
-    for (ObjectError e : newErrors.getGlobalErrors()) {
-      errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage());
-    }
-    // Field Errors
-    for (FieldError e : newErrors.getFieldErrors()) {
-      errors.rejectValue(
-          StringFunc.concatWithDelim(relativePath, DELIMITER, e.getField()),
-          e.getCode(),
-          e.getArguments(),
-          e.getDefaultMessage());
-    }
+    newErrors
+        .getGlobalErrors()
+        .forEach(e -> errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage()));
+    newErrors
+        .getFieldErrors()
+        .forEach(
+            e ->
+                errors.rejectValue(
+                    StringFunc.concatWithDelim(relativePath, DELIMITER, e.getField()),
+                    e.getCode(),
+                    e.getArguments(),
+                    e.getDefaultMessage()));
   }
 
   public static void mergeErrorsToGlobal(Errors errors, Errors newErrors) {
-    // Global errors
-    for (ObjectError e : newErrors.getGlobalErrors()) {
-      errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage());
-    }
-    // Field Errors
-    for (FieldError e : newErrors.getFieldErrors()) {
-      errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage());
-    }
+    newErrors
+        .getGlobalErrors()
+        .forEach(e -> errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage()));
+    newErrors
+        .getFieldErrors()
+        .forEach(e -> errors.reject(e.getCode(), e.getArguments(), e.getDefaultMessage()));
   }
 
   public static void mergeErrorsToField(
@@ -56,46 +49,45 @@ public class ErrorsMerger {
   }
 
   public static void mergeErrorsToField(Errors errors, Errors newErrors, String relativePath) {
-    // Global errors
-    for (ObjectError e : newErrors.getGlobalErrors()) {
-      errors.rejectValue(relativePath, e.getCode(), e.getArguments(), e.getDefaultMessage());
-    }
-    // Field Errors
-    for (FieldError e : newErrors.getFieldErrors()) {
-      errors.rejectValue(
-          StringFunc.concatWithDelim(relativePath, DELIMITER, e.getField()),
-          e.getCode(),
-          e.getArguments(),
-          e.getDefaultMessage());
-    }
+    newErrors
+        .getGlobalErrors()
+        .forEach(
+            e ->
+                errors.rejectValue(
+                    relativePath, e.getCode(), e.getArguments(), e.getDefaultMessage()));
+    newErrors
+        .getFieldErrors()
+        .forEach(
+            e ->
+                errors.rejectValue(
+                    StringFunc.concatWithDelim(relativePath, DELIMITER, e.getField()),
+                    e.getCode(),
+                    e.getArguments(),
+                    e.getDefaultMessage()));
   }
 
   public static String asString(Errors errors) {
-    StringBuilder result = new StringBuilder();
-    if (errors != null) {
-      for (ObjectError e : errors.getGlobalErrors()) {
-        result.append(
-            "error object "
-                + e.getObjectName()
-                + ": "
-                + e.getCode()
-                + "("
-                + e.getArguments()
-                + ") // "
-                + e.getDefaultMessage());
-      }
-      for (FieldError e : errors.getFieldErrors()) {
-        result.append(
-            "error field "
-                + e.getField()
-                + ": "
-                + e.getCode()
-                + "("
-                + e.getArguments()
-                + ") // "
-                + e.getDefaultMessage());
-      }
-    }
-    return result.toString();
+    return errors == null
+        ? ""
+        : concat(
+                errors.getGlobalErrors().stream()
+                    .map(
+                        e ->
+                            String.format(
+                                "error object %s: %s (%s) // %s",
+                                e.getObjectName(),
+                                e.getCode(),
+                                e.getArguments(),
+                                e.getDefaultMessage())),
+                errors.getFieldErrors().stream()
+                    .map(
+                        e ->
+                            String.format(
+                                "error field %s: %s (%s) // %s",
+                                e.getField(),
+                                e.getCode(),
+                                e.getArguments(),
+                                e.getDefaultMessage())))
+            .collect(joining("\n"));
   }
 }

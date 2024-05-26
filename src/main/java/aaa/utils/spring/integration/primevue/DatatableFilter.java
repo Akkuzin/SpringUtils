@@ -12,10 +12,8 @@ import aaa.utils.spring.integration.jpa.IAbstractPOJO;
 import aaa.utils.spring.integration.jpa.QueryParams;
 import aaa.utils.spring.integration.jpa.SpecificationValuedMaker;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.Streams;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +29,8 @@ import lombok.Setter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 
 @AllArgsConstructor
@@ -82,11 +82,10 @@ public class DatatableFilter<T extends IAbstractPOJO> {
   public static class FieldFilter extends DatatableFilter.FieldConstraint {
 
     String operator;
-
-    List<FieldConstraint> constraints = new ArrayList(asList(new FieldConstraint()));
+    List<FieldConstraint> constraints;
 
     List<FieldConstraint> extractConstraints() {
-      return ofNullable(constraints).filter(Objects::nonNull).orElseGet(() -> asList(this));
+      return ofNullable(constraints).filter(not(Collection::isEmpty)).orElseGet(() -> asList(this));
     }
   }
 
@@ -147,13 +146,16 @@ public class DatatableFilter<T extends IAbstractPOJO> {
   }
 
   Sort extractSort() {
-    return Sort.by(
-        Streams.concat(
-                Stream.ofNullable(extractMetaSort())
-                    .filter(not(sort -> sort.isEmpty()))
-                    .flatMap(sort -> sort.stream().map(SortMeta::extractOrder)),
-                Stream.of(Sort.Order.desc("id")))
-            .toList());
+    List<Order> orderList =
+        Stream.ofNullable(extractMetaSort())
+            .filter(not(List::isEmpty))
+            .flatMap(sort -> sort.stream().map(SortMeta::extractOrder))
+            .toList();
+    Optional<Order> last = orderList.stream().reduce((v1, v2) -> v2);
+    return last.map(Order::getProperty).equals(Optional.of("id"))
+        ? Sort.by(orderList)
+        : Sort.by(orderList)
+            .and(Sort.by(last.map(Order::getDirection).orElse(Direction.DESC), "id"));
   }
 
   public Pageable extractPageable() {

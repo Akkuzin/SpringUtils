@@ -1,8 +1,8 @@
 package aaa.utils.spring.pojo;
 
 import static aaa.lambda.LambdaUtils.sneakyThrowsSupplier;
-import static aaa.utils.spring.errors.IntrospectionUtils.asGetter;
-import static aaa.utils.spring.errors.IntrospectionUtils.asSetter;
+import static aaa.lang.reflection.IntrospectionUtils.asGetter;
+import static aaa.lang.reflection.IntrospectionUtils.asSetter;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -43,7 +43,7 @@ public class PojoUtils {
     }
 
     public static <T> SummatorBuilder<T> forClass(Class<T> clazz) {
-      return new SummatorBuilder<T>(clazz);
+      return new SummatorBuilder<>(clazz);
     }
 
     public SummatorBuilder<T> add(Function<T, ?> getter) {

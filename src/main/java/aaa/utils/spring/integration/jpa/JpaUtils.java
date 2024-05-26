@@ -1,12 +1,13 @@
 package aaa.utils.spring.integration.jpa;
 
 import static aaa.utils.spring.integration.jpa.AbstractPOJOUtils.getPojoClass;
-import static aaa.utils.spring.integration.jpa.DaoUtils.asGetter;
 import static aaa.utils.spring.integration.jpa.DaoUtils.initialize;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.split;
 
+import aaa.lang.reflection.IntrospectionUtils;
+import aaa.utils.spring.integration.jpa.JpaUtils.EntityGraphBuilder.PseudoSubgraph;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import jakarta.persistence.AttributeNode;
@@ -21,13 +22,13 @@ import jakarta.persistence.metamodel.Attribute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -109,8 +110,7 @@ public class JpaUtils {
   }
 
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
-  @NoArgsConstructor
-  @Builder(access = AccessLevel.PRIVATE)
+  @NoArgsConstructor(staticName = "builder")
   @EqualsAndHashCode
   public static class EntityGraphBuilder<T> {
 
@@ -144,8 +144,13 @@ public class JpaUtils {
       return this;
     }
 
+    public List<String> asPaths() {
+      return new ArrayList<>(paths);
+    }
+
     @SneakyThrows
-    public EntityGraph<T> build(EntityManager entityManager, Class<T> clazz) {
+    public EntityGraph<T> build(EntityManager entityManager) {
+      assert clazz != null;
       Collections.sort(paths);
       if (paths.isEmpty()) {
         return null;
@@ -159,6 +164,11 @@ public class JpaUtils {
                 paths.forEach(path -> makeGraph(asList(StringUtils.split(path, '.')), subgraph));
                 return subgraph.entityGraph;
               });
+    }
+
+    @SneakyThrows
+    public EntityGraph<T> build(EntityManager entityManager, Class<T> clazz) {
+      return this.withClazz(clazz).build(entityManager);
     }
 
     static void makeGraph(List<String> pathComponents, Subgraph<?> parent) {
@@ -203,7 +213,9 @@ public class JpaUtils {
             attributeNode -> {
               Object fieldValue =
                   initialize(
-                      asGetter(getPojoClass(pojo), attributeNode.getAttributeName()).apply(pojo));
+                      IntrospectionUtils.asGetter(
+                              getPojoClass(pojo), attributeNode.getAttributeName())
+                          .apply(pojo));
               if (fieldValue != null) {
                 Stream.ofNullable(attributeNode.getSubgraphs())
                     .flatMap(subgraphs -> subgraphs.values().stream())
@@ -219,5 +231,31 @@ public class JpaUtils {
               }
             });
     return pojo;
+  }
+
+  static class PathExtractor<T> {
+    LinkedList<String> stack = new LinkedList<>();
+    List<String> paths = new ArrayList<>();
+
+    List<String> iterate(Subgraph<?> graph) {
+      graph
+          .getAttributeNodes()
+          .forEach(
+              attributeNode -> {
+                stack.push(attributeNode.getAttributeName());
+                if (attributeNode.getSubgraphs() == null
+                    || attributeNode.getSubgraphs().isEmpty()) {
+                  paths.add(String.join(".", stack));
+                } else {
+                  attributeNode.getSubgraphs().values().forEach(subgraph -> iterate(subgraph));
+                }
+                stack.pop();
+              });
+      return paths;
+    }
+  }
+
+  public static <T> List<String> graphAsPaths(EntityGraph<T> entityGraph) {
+    return new PathExtractor<T>().iterate(PseudoSubgraph.of(entityGraph));
   }
 }

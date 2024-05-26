@@ -1,4 +1,4 @@
-package aaa.utils.spring.errors;
+package aaa.utils.spring.template;
 
 import static aaa.utils.spring.integration.jpa.AbstractPOJOUtils.getPojoClass;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;

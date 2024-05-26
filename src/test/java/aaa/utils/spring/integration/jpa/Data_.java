@@ -33,7 +33,7 @@ public abstract class Data_ {
       make(LocalDateTime.class, DATE);
 
   public static <Y> SingularAttribute<Data, Y> make(Class<Y> clazz, String name) {
-    return new SingularAttribute<Data, Y>() {
+    return new SingularAttribute<>() {
       @Override
       public BindableType getBindableType() {
         return null;
@@ -56,7 +56,7 @@ public abstract class Data_ {
 
       @Override
       public ManagedType<Data> getDeclaringType() {
-        return new ManagedType<Data>() {
+        return new ManagedType<>() {
           @Override
           public Set<Attribute<? super Data, ?>> getAttributes() {
             return Set.of();

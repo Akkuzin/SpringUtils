@@ -1,13 +1,21 @@
 package aaa.utils.spring.integration.jpa;
 
+import static aaa.nvl.Nvl.nvl;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 
 import aaa.utils.spring.integration.jpa.JpaUtils.EntityGraphBuilder;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.Query;
+import java.io.Serializable;
+import java.util.Collection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +25,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.With;
 import lombok.experimental.WithBy;
-import org.glassfish.jaxb.core.v2.model.core.ID;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.CacheMode;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -35,9 +45,9 @@ public class QueryParams<T> {
   EntityGraphType entityGraphType;
   EntityGraph<T> entityGraph;
   String entityGraphName;
-  @Default @WithBy EntityGraphBuilder<T> load = new EntityGraphBuilder<T>();
+  @Default @WithBy EntityGraphBuilder<T> load = EntityGraphBuilder.builder();
 
-  @Default @WithBy EntityGraphBuilder<T> select = new EntityGraphBuilder<T>();
+  @Default @WithBy EntityGraphBuilder<T> select = EntityGraphBuilder.builder();
 
   @With Boolean cacheable;
   String queryCacheRegion;
@@ -46,16 +56,34 @@ public class QueryParams<T> {
 
   @With LockModeType lockMode;
 
-  public static <T, ID> QueryParams<T> forId(ID id) {
-    return QueryParams.<T>builder()
-        .build()
-        .withExtraSpec(
-            (Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb) ->
-                cb.equal(root.get("id"), id));
+  public static <ID extends Serializable & Comparable<ID>, T extends IAbstractPOJO<ID>>
+      QueryParams<T> forId(ID id) {
+    return QueryParams.forFilter(IdFilter.forId(id));
+  }
+
+  public static <ID extends Serializable & Comparable<ID>, T extends IAbstractPOJO<ID>>
+      QueryParams<T> forIds(Collection<ID> ids) {
+    return forFilter(IdFilter.forIds(ids));
+  }
+
+  public static <
+          ID extends Serializable & Comparable<ID>,
+          T extends IAbstractPOJO<ID>,
+          F extends IAbstractFilter<ID, T>>
+      QueryParams<T> forFilter(F filter) {
+    return QueryParams.<T>build().withExtraSpec(filter);
   }
 
   public QueryParams<T> withUnpagedSort(Sort sort) {
     return withPageable(Pageable.unpaged(sort));
+  }
+
+  public QueryParams<T> firstBySort(Sort sort) {
+    return firstNBySort(1, sort);
+  }
+
+  public QueryParams<T> firstNBySort(int count, Sort sort) {
+    return withPageable(PageRequest.of(0, count, sort));
   }
 
   public QueryParams<T> withExtraSpec(Specification<T> extraSpec) {
@@ -100,5 +128,33 @@ public class QueryParams<T> {
 
   public QueryParams<T> forUpdate() {
     return withLockMode(LockModeType.PESSIMISTIC_WRITE);
+  }
+
+  public <Q extends Query> Q applyToQuery(Q query, EntityManager em, Class<T> domainClass) {
+    if (entityGraph != null || isNotBlank(entityGraphName) || !load.paths.isEmpty()) {
+      query.setHint(
+          nvl(entityGraphType, EntityGraphType.LOAD).getKey(),
+          ofNullable(entityGraph)
+              .or(
+                  () ->
+                      ofNullable(entityGraphName)
+                          .filter(StringUtils::isNotBlank)
+                          .map(name -> (EntityGraph<T>) em.getEntityGraph(name)))
+              .orElseGet(() -> load.build(em, domainClass)));
+    }
+    if (nvl(cacheable, false)) {
+      query.setHint(HINT_CACHE_MODE, CacheMode.NORMAL);
+      query.setHint(HINT_CACHEABLE, Boolean.TRUE);
+      if (isNotBlank(queryCacheRegion)) {
+        query.setHint(HINT_CACHE_REGION, queryCacheRegion);
+      }
+    }
+    if (noFlush) {
+      query.setFlushMode(FlushModeType.COMMIT);
+    }
+    if (getLockMode() != null) {
+      query.setLockMode(getLockMode());
+    }
+    return query;
   }
 }

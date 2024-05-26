@@ -15,7 +15,7 @@ public class PeriodicalUtils {
               try {
                 runnable.run();
               } catch (Throwable e) {
-                log.error("Ошибка при запуске периодического задания (" + taskName + ")", e);
+                log.error("Ошибка при запуске периодического задания: " + taskName, e);
               }
             });
   }
@@ -27,7 +27,7 @@ public class PeriodicalUtils {
               try {
                 return callable.call();
               } catch (Throwable e) {
-                log.error("Ошибка при запуске периодического задания (" + taskName + ")", e);
+                log.error("Ошибка при запуске периодического задания: " + taskName, e);
                 return null;
               }
             });

@@ -40,7 +40,7 @@ public class MimeUtils {
   }
 
   @SuppressWarnings("checkstyle:IllegalCatch")
-  public static String getExtentionForMimeType(String mimeType) {
+  public static String getExtensionForMimeType(String mimeType) {
     return ofNullable(mimeType)
         .filter(StringUtils::isNotBlank)
         .map(

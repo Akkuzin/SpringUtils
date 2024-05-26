@@ -1,6 +1,9 @@
 package aaa.utils.spring.i18n;
 
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.countMatches;
+import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 import aaa.i18n.I18NResolver;
@@ -26,25 +29,41 @@ public class I18N implements I18NResolver {
   // CHECKSTYLE:ON
 
   public String resolveCode(String code, String defaultValue) {
-    return defaultIfBlank(messageSource.getMessage(code, null, locale), defaultValue);
+    if (code == null) {
+      return null;
+    }
+    String message = messageSource.getMessage(code, null, defaultValue, locale);
+    if (message == null
+        && defaultValue == null
+        && startsWith(code, ENTITY)
+        && countMatches(code, ".") == 2) {
+      message =
+          messageSource.getMessage(ENTITY + substringAfterLast(code, "."), null, null, locale);
+    }
+    return message;
   }
 
   public String resolveField(SingularAttribute<?, ?> attribute) {
-    return resolveCode(
-        ENTITY
-            + uncapitalize(attribute.getDeclaringType().getJavaType().getSimpleName())
-            + "."
-            + uncapitalize(attribute.getName()));
+    return ofNullable(
+            resolveCode(
+                ENTITY
+                    + uncapitalize(attribute.getDeclaringType().getJavaType().getSimpleName())
+                    + "."
+                    + uncapitalize(attribute.getName())))
+        .orElseGet(() -> resolveEntity(attribute.getJavaType()));
   }
 
   public String resolveEntity(ManagedType<?> declaringType) {
-    return resolveCode(ENTITY + uncapitalize(declaringType.getJavaType().getSimpleName()));
+    return resolveEntity(declaringType.getJavaType());
+  }
+
+  public String resolveEntity(Class clazz) {
+    return resolveCode(ENTITY + uncapitalize(clazz.getSimpleName()));
   }
 
   public String resolveEntity(SingularAttribute<?, Long> attribute) {
     assert "id".equals(attribute.getName());
-    return resolveCode(
-        ENTITY + uncapitalize(attribute.getDeclaringType().getJavaType().getSimpleName()));
+    return resolveEntity(attribute.getDeclaringType().getJavaType());
   }
 
   public String getLocaleCode() {

@@ -42,9 +42,7 @@ public class ExecuteUtils {
 
   @SneakyThrows
   public <V> V doCallSneaky(Callable<V> callable) {
-    return execWithAuth(
-        authentication,
-        () -> callable.call());
+    return execWithAuth(authentication, () -> callable.call());
   }
 
   public <V, E extends Exception> void doRun(CustomCallable<Void, E> callable) throws E {
@@ -54,27 +52,20 @@ public class ExecuteUtils {
   public <E extends Exception> void doRun(CustomRunnable<E> runnable) throws E {
     execWithAuth(
         authentication,
-        (CustomCallable<Void, E>) () -> {
-          runnable.run();
-          return null;
-        });
+        (CustomCallable<Void, E>)
+            () -> {
+              runnable.run();
+              return null;
+            });
   }
 
   public static <V, E extends Exception> V execWithAuth(
       Authentication providedAuthentication, CustomCallable<V, E> callable) throws E {
-    // FIXED На самом деле SecurityContext расшарен между запросами одной сессии. Таким образом,
-    //  временно установленный здесь контекст будет подменён при параллельном запросе из другой
-    //  вкладки браузера.
-    //  См.
+
+    // SecurityContext общий у запросов одной сессии.
+    // Нужно заменяеть контекст целиком, а не аутентификацию внутри контекста.
     // https://docs.spring.io/spring-security/site/docs/3.1.x/reference/springsecurity-single.html#tech-intro-sec-context-persistence
-
-    // NB здесь заменяется контекст целиком, а не аутентификация внутри существующего контекста.
-    //  Так велит делать гайд Spring Security:
     // https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html#servlet-authentication-securitycontextholder
-    // It is important to create a new SecurityContext instance instead of using
-    // SecurityContextHolder.getContext().setAuthentication(authentication) to avoid race conditions
-    // across multiple threads.
-
     var oldContext = SecurityContextHolder.getContext();
     try {
       var newContext = SecurityContextHolder.createEmptyContext();
@@ -88,19 +79,11 @@ public class ExecuteUtils {
 
   public static <V> Future<V> execWithAuth(
       Authentication providedAuthentication, ExecutorService executor, Supplier<V> supplier) {
-    // FIXED На самом деле SecurityContext расшарен между запросами одной сессии. Таким образом,
-    //  временно установленный здесь контекст будет подменён при параллельном запросе из другой
-    //  вкладки браузера.
-    //  См.
+
+    // SecurityContext общий у запросов одной сессии.
+    // Нужно заменяеть контекст целиком, а не аутентификацию внутри контекста.
     // https://docs.spring.io/spring-security/site/docs/3.1.x/reference/springsecurity-single.html#tech-intro-sec-context-persistence
-
-    // NB здесь заменяется контекст целиком, а не аутентификация внутри существующего контекста.
-    //  Так велит делать гайд Spring Security:
     // https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html#servlet-authentication-securitycontextholder
-    // It is important to create a new SecurityContext instance instead of using
-    // SecurityContextHolder.getContext().setAuthentication(authentication) to avoid race conditions
-    // across multiple threads.
-
     return executor.submit(
         () -> {
           var oldContext = SecurityContextHolder.getContext();

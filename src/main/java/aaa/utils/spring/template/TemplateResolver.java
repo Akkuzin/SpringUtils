@@ -1,12 +1,13 @@
 package aaa.utils.spring.template;
 
+import static aaa.basis.text.StringFunc.ellipsis;
 import static aaa.nvl.Nvl.nvlGet;
 import static aaa.utils.spring.integration.jpa.AbstractPOJOUtils.getPojoClass;
 import static java.util.Collections.emptySet;
 import static java.util.Map.entry;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.substring;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 import aaa.i18n.I18NResolver;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -53,19 +55,21 @@ public class TemplateResolver implements ITemplateResolver {
 
   MessageSource messageSource;
 
-  private static VelocityEngine makeEngine() {
-    VelocityEngine engine = null;
+  private static Optional<Properties> getProperties() {
     try {
       Properties velocityProperties = new Properties();
       try (InputStream stream = TemplateResolver.class.getResourceAsStream("velocity.properties")) {
         velocityProperties.load(stream);
-        engine = new VelocityEngine(velocityProperties);
+        return of(velocityProperties);
       }
-      // CHECKSTYLE:OFF
     } catch (Exception e) {
-      // CHECKSTYLE:ON
-      log.error("Ошибка инициализации шаблонизатора", e);
+      return Optional.empty();
     }
+  }
+
+  private static VelocityEngine makeEngine() {
+    VelocityEngine engine = new VelocityEngine();
+    getProperties().ifPresent(engine::setProperties);
     return engine;
   }
 
@@ -189,43 +193,9 @@ public class TemplateResolver implements ITemplateResolver {
     try {
       VELOCITY_ENGINE.evaluate(context, writer, "Message template resolvers", message);
     } catch (ParseErrorException | MethodInvocationException | ResourceNotFoundException e) {
-      log.warn("Ошибка при разрешении шаблона сообщения " + substring(message, 0, 200), e);
+      log.warn("Ошибка при разрешении шаблона сообщения: " + ellipsis(message, 100), e);
     }
     return writer.toString();
-  }
-
-  @NoArgsConstructor(staticName = "init")
-  @FieldDefaults(level = AccessLevel.PRIVATE)
-  public static class ParamsFactory {
-
-    Map<String, Object> beans = new HashMap<>();
-
-    public ParamsFactory addBean(String name, Object object) {
-      beans.put(name, object);
-      return this;
-    }
-
-    public ParamsFactory addBeans(Map<String, Object> newBeans) {
-      if (newBeans != null) {
-        beans.putAll(newBeans);
-      }
-      return this;
-    }
-
-    public ParamsFactory addBeanWithDefaultName(Object object) {
-      if (object != null) {
-        addBean(uncapitalize(getPojoClass(object).getSimpleName()), object);
-      }
-      return this;
-    }
-
-    public Map<String, Object> getBeans() {
-      return beans;
-    }
-
-    public static Map<String, Object> single(Object object) {
-      return ParamsFactory.init().addBeanWithDefaultName(object).getBeans();
-    }
   }
 
   public static Map<String, Object> extractParams(Object[] args) {

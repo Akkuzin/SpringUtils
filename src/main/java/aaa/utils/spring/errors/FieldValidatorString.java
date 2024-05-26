@@ -27,7 +27,7 @@ public class FieldValidatorString extends FieldValidator<String, FieldValidatorS
   /** Validates field value match with custom regular expression */
   protected FieldValidatorString validateRegexp(String regexp, String regexpName) {
     if (!skipFollowing) {
-      if (value == null || !Regexps.isMatches(value, regexp)) {
+      if (value == null || !value.matches(regexp)) {
         fieldError(
             "api.format",
             ImmutableMap.of("desc", nullToEmpty(regexpName)),

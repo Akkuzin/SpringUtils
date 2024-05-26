@@ -203,7 +203,7 @@ public class MultipartFileSender {
           output.println(
               "Content-Range: bytes " + range.start + "-" + range.end + "/" + range.total);
 
-          // Copy single part range of multi part range.
+          // Copy single part range of multipart range.
           range.copy(input, output, bufferSize);
         }
 

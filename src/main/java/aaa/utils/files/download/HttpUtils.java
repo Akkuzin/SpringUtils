@@ -57,6 +57,7 @@ public class HttpUtils {
     HttpServletResponse response;
     String userAgent;
     String mimeType;
+    boolean skipContentDisposition;
     ServletContext servletContext;
 
     protected DataSender() {}
@@ -89,6 +90,11 @@ public class HttpUtils {
 
     public DataSender mimeType(@NonNull String mimeType) {
       this.mimeType = mimeType;
+      return this;
+    }
+
+    public DataSender skipContentDisposition() {
+      this.skipContentDisposition = true;
       return this;
     }
 
@@ -125,9 +131,11 @@ public class HttpUtils {
         response.setContentType(servletContext.getMimeType(filename));
       }
       response.setContentLength(dataLength);
-      response.setHeader(
-          CONTENT_DISPOSITION,
-          "attachment; " + makeContentDisposition(filename, lowerCase(userAgent)));
+      if (!skipContentDisposition) {
+        response.setHeader(
+            CONTENT_DISPOSITION,
+            "attachment; " + makeContentDisposition(filename, lowerCase(userAgent)));
+      }
       try (ServletOutputStream outputStream = response.getOutputStream()) {
         FileCopyUtils.copy(data, outputStream);
       }

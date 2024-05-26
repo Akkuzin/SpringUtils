@@ -1,6 +1,9 @@
 package aaa.utils.spring.errors;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.Temporal;
 import lombok.Builder;
 
@@ -25,7 +28,12 @@ public class FieldValidatorTemporal extends FieldValidator<Temporal, FieldValida
   public FieldValidatorTemporal noFuture() {
     if (!skipFollowing && value != null) {
       fieldError(
-          Instant.from(value).isAfter(Instant.now()),
+          (value instanceof LocalDate localDate
+                  ? localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()
+                  : (value instanceof LocalDateTime localDateTime
+                      ? localDateTime.atZone(ZoneId.systemDefault()).toInstant()
+                      : Instant.from(value)))
+              .isAfter(Instant.now()),
           ErrorInfo.builder()
               .apiCode("api.noFutureDateAllowed")
               .defaultText(

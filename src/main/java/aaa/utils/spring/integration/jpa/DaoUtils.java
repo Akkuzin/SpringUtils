@@ -1,20 +1,14 @@
 package aaa.utils.spring.integration.jpa;
 
 import static aaa.lambda.LambdaUtils.caster;
-import static aaa.lang.reflection.ReflectionUtils.makeGetterPropertyResolver;
 import static aaa.utils.spring.integration.jpa.AbstractPOJOUtils.getPojoClass;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 import static org.apache.commons.lang3.StringUtils.substring;
 
-import aaa.lang.reflection.ReflectionUtils;
-import aaa.lang.reflection.getter.GetterPropertyResolver;
-import aaa.utils.spring.errors.IntrospectionUtils;
+import aaa.lang.reflection.IntrospectionUtils;
 import aaa.utils.spring.pojo.PojoUtils;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -22,7 +16,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -50,40 +43,6 @@ public class DaoUtils {
       entity = (T) ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
     }
     return entity;
-  }
-
-  private static final Cache<Object, Function> GETTERS = CacheBuilder.newBuilder().build();
-
-  @SneakyThrows
-  public static Function asGetter(Class clazz, String field) {
-    return GETTERS.get(
-        asList(clazz, field),
-        () -> ReflectionUtils.asGetter(clazz.getMethod("get" + capitalize(field))));
-  }
-
-  private static final Cache<Object, BiConsumer> SETTERS = CacheBuilder.newBuilder().build();
-
-  @SneakyThrows
-  public static BiConsumer asSetter(Class clazz, String field) {
-    return SETTERS.get(
-        asList(clazz, field),
-        () ->
-            ReflectionUtils.asSetter(
-                clazz.getMethod("set" + capitalize(field), asType(clazz, field))));
-  }
-
-  private static final Cache<Object, GetterPropertyResolver> RESOLVERS =
-      CacheBuilder.newBuilder().build();
-  private static final Cache<Object, Class> FIELD_TYPES = CacheBuilder.newBuilder().build();
-
-  @SneakyThrows
-  public static Class asType(Class clazz, String field) {
-    return FIELD_TYPES.get(
-        asList(clazz, field),
-        () ->
-            RESOLVERS
-                .get(clazz, () -> makeGetterPropertyResolver(clazz))
-                .resolveType(asGetter(clazz, field)));
   }
 
   public static String limitLength(int length, String value) {
@@ -182,10 +141,10 @@ public class DaoUtils {
     if (source != null) {
       Class<T> clazz = getPojoClass(source);
       for (String field : fields) {
-        if (asGetter(clazz, field).apply(source) == null) {
-          Class<?> type = asType(clazz, field);
+        if (IntrospectionUtils.asGetter(clazz, field).apply(source) == null) {
+          Class<?> type = IntrospectionUtils.resolveType(clazz, field);
           if (Number.class.isAssignableFrom(type)) {
-            asSetter(clazz, field).accept(source, PojoUtils.defaultValue(type));
+            IntrospectionUtils.asSetter(clazz, field).accept(source, PojoUtils.defaultValue(type));
           }
         }
       }

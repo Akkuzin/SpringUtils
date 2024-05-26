@@ -1,6 +1,5 @@
 package aaa.utils.spring.errors;
 
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Regexps {
@@ -20,29 +19,10 @@ public class Regexps {
 
   // CHECKSTYLE:ON
 
-  /**
-   * Check where or not string satisfies pattern
-   *
-   * @param string String to be matched
-   * @param patternString String containing pattern for matching
-   * @return
-   */
-  public static boolean isMatches(String string, String patternString) {
-    return Pattern.matches(patternString, string);
-  }
-
-  /**
-   * Check where or not string satisfies patterns
-   *
-   * @param string String to be matched
-   * @param patterns String array containing patterns for matching
-   * @return
-   */
-  public static boolean isMatches(String string, String[] patterns) {
-    if (patterns == null) {
-      return true;
-    }
-    return Stream.of(patterns).anyMatch(pattern -> isMatches(string, pattern));
+  /** Check where or not string satisfies all patterns */
+  public static boolean isMatches(String string, String... patterns) {
+    return string != null
+        && (patterns == null || Stream.of(patterns).anyMatch(pattern -> string.matches(pattern)));
   }
 
   /** Check where or not email address is valid */

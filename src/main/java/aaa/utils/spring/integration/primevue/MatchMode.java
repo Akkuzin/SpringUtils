@@ -155,7 +155,7 @@ public abstract class MatchMode implements SpecificationMaker {
                                     .equals("true")) // PrimeVUE -> TreeSelect
                         .map(e -> SafeParse.parseLong(e.getKey(), null))
                         .filter(Objects::nonNull)
-                        .forEach(id -> in.value(id));
+                        .forEach(in::value);
               } else if (value instanceof Collection<?> collectionValue) {
                 collectionValue.stream()
                     .map(
@@ -333,6 +333,7 @@ public abstract class MatchMode implements SpecificationMaker {
                     return null;
                   }
                 })
+            .filter(Objects::nonNull)
             .findFirst();
       }
     } else if (value instanceof TemporalAccessor temporalAccessor) {

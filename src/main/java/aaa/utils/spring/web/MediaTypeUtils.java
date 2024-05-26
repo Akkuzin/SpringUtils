@@ -1,7 +1,6 @@
 package aaa.utils.spring.web;
 
 import java.nio.charset.StandardCharsets;
-import org.apache.commons.lang3.CharEncoding;
 import org.springframework.http.MediaType;
 
 public class MediaTypeUtils {

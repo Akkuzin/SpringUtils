@@ -21,8 +21,6 @@ public class InitBinderUtils {
   }
 
   public static String[] nestedFields(String nestedPath, String[] fields) {
-    return Stream.of(fields)
-        .map(field -> nestedPath + "." + field)
-        .toArray(size -> new String[size]);
+    return Stream.of(fields).map(field -> nestedPath + "." + field).toArray(String[]::new);
   }
 }
